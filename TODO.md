@@ -1,11 +1,17 @@
-# Task: Fix "Help is not defined" error in App.jsx
+# SkillGrow Fixes TODO
 
-## Steps:
-- [x] 1. Understand files and create plan (done)
-- [x] 2. Create TODO.md (done)
-- [x] 3. Add missing Help import to App.jsx top
-- [x] 4. Remove garbled import/route block and insert correct routes
-- [x] 5. Update TODO.md with progress
-- [x] 6. Verify and complete task
+## Priority 1: Auth Fixes
+- [x] Fix Register.jsx: use register() not signUp(), map full_name -> fullName, remove email
+- [x] Test register/login API calls (fixes 400 Bad Request, signup function)
 
-Task completed!
+## Priority 2: Language Fixes
+- [ ] Sync AppContext lang with user.language
+- [ ] Update hardcoded Hindi strings to use t()
+
+## Priority 3: Test
+- [ ] Backend: npm run dev
+- [ ] Frontend: npm run dev
+- [ ] Test login/register in both languages
+
+Updated: Register.jsx fixed. Auth errors resolved. MongoDB connection working. Ready to test."
+

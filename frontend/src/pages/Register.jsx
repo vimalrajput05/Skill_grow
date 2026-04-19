@@ -9,7 +9,7 @@ export default function Register() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { signUp } = useAuth();
+const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,14 +23,14 @@ export default function Register() {
     if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     setLoading(true);
     try {
-      const email = `${form.mobile}@skillgrow.in`;
-      await signUp(email, form.password, {
-        full_name: form.fullName,
+      await register({
+        fullName: form.fullName,
         mobile: form.mobile,
+        password: form.password,
         village: form.village,
-        state: form.state,
+        state: form.state
       });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Registration failed';
       setError(message.includes('already registered') ? 'This mobile number is already registered.' : message);

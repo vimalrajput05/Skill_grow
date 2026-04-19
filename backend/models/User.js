@@ -7,12 +7,12 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Full name is required'],
     trim: true
   },
-  mobile: {
-    type: String,
-    required: [true, 'Mobile number is required'],
-    unique: true,
-    match: [/^[6-9]\\d{9}$/, 'Mobile number must be 10 digits starting with 6-9']
-  },
+ mobile: {
+  type: String,
+  required: [true, 'Mobile number is required'],
+  unique: true,
+  match: [/^[6-9]\d{9}$/, 'Mobile number must be 10 digits starting with 6-9']
+},
   password: {
     type: String,
     required: [true, 'Password is required'],
