@@ -1,28 +1,32 @@
-import { useState, useEffect } from 'react';
-import { Upload, CheckCircle, Clock, PlusCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Upload, CheckCircle, PlusCircle, Image, Video, X, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useAppContext } from '../context/AppContext';
 import { skillsAPI } from '../services/api';
 import { SKILL_CATEGORIES } from '../data/mockData';
 
-const CATEGORY_COLORS = {
-  Farming: 'bg-green-100 text-green-700', Carpentry: 'bg-amber-100 text-amber-700',
-  Sewing: 'bg-pink-100 text-pink-700', Digital: 'bg-blue-100 text-blue-700',
-  Business: 'bg-orange-100 text-orange-700', AI: 'bg-violet-100 text-violet-700',
-  Safety: 'bg-red-100 text-red-700', Other: 'bg-gray-100 text-gray-700',
+const STATUS_STYLES = {
+  verified: 'bg-green-50 text-green-700 border-green-100',
+  pending: 'bg-yellow-50 text-yellow-700 border-yellow-100',
 };
 
 export default function AddSkill() {
   const { user } = useAuth();
-  const [form, setForm] = useState({ skill_name: '', category: '', description: '' });
+  const { lang } = useAppContext();
+  const [form, setForm] = useState({ skillName: '', category: '', description: '' });
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const photoRef = useRef(null);
+  const videoRef = useRef(null);
 
   const loadSkills = async () => {
     if (!user) return;
     try {
-      const res = await skillsAPI.getMySkills(user.id);
-      setSkills(Array.isArray(res.data) ? res.data : []);
+      const res = await skillsAPI.getMySkills();
+      setSkills(Array.isArray(res.data?.data || res.data) ? (res.data?.data || res.data) : []);
     } catch { setSkills([]); }
   };
 
@@ -33,104 +37,159 @@ export default function AddSkill() {
     if (!user) return;
     setLoading(true);
     try {
-      await skillsAPI.addSkill({ ...form, user_id: user.id, status: 'pending' });
+      await skillsAPI.addMySkill({ ...form, userId: user.id });
       setSuccess(true);
-      setForm({ skill_name: '', category: '', description: '' });
+      setForm({ skillName: '', category: '', description: '' });
+      setPhotoPreview(null);
+      setVideoPreview(null);
       loadSkills();
-      setTimeout(() => setSuccess(false), 3000);
-    } catch { alert('Failed to add skill. Please try again.'); }
-    finally { setLoading(false); }
+      setTimeout(() => setSuccess(false), 4000);
+    } catch {
+      alert(lang === 'hi' ? 'स्किल जोड़ने में समस्या हुई। दोबारा कोशिश करें।' : 'Failed to add skill. Please try again.');
+    } finally { setLoading(false); }
+  };
+
+  const handlePhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (file) setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleVideo = (e) => {
+    const file = e.target.files?.[0];
+    if (file) setVideoPreview(URL.createObjectURL(file));
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white border-b border-gray-100 px-4 py-4 lg:px-6 sticky top-0 z-20">
-        <h1 className="text-lg font-bold text-gray-900">Add Your Skill</h1>
-        <p className="text-xs text-gray-500">अपनी स्किल जोड़ें</p>
+    <div className="space-y-5 max-w-2xl mx-auto">
+      <div>
+        <h1 className="text-xl font-black text-gray-900">{lang === 'hi' ? 'अपनी स्किल जोड़ें' : 'Add Your Skill'}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">{lang === 'hi' ? 'अपनी स्किल जोड़कर काम पाएं' : 'Showcase your skills and get hired'}</p>
       </div>
 
-      <div className="px-4 py-5 lg:px-6 space-y-6">
-        {success && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-            <CheckCircle className="text-green-600" size={20} />
-            <p className="text-sm font-medium text-green-800">Skill added! It will be verified soon. (स्किल जोड़ी गई)</p>
-          </div>
-        )}
-
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2"><PlusCircle size={16} className="text-green-600" /> New Skill Details</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Skill Name (स्किल का नाम) *</label>
-              <input value={form.skill_name} onChange={e => setForm(p => ({ ...p, skill_name: e.target.value }))} placeholder="e.g. Carpentry, Sewing, Digital Marketing" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500" required />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category (श्रेणी) *</label>
-              <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 appearance-none bg-white" required>
-                <option value="">Select a category</option>
-                {SKILL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description (विवरण) <span className="text-gray-400 font-normal">Optional</span></label>
-              <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Briefly describe your experience with this skill..." className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" rows={3} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <button type="button" className="flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm font-medium text-gray-500 hover:border-green-300 hover:text-green-600 transition">
-                <Upload size={16} /> Photo Proof
-              </button>
-              <button type="button" className="flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm font-medium text-gray-500 hover:border-blue-300 hover:text-blue-600 transition">
-                <Upload size={16} /> Video Proof
-              </button>
-            </div>
-
-            <button type="submit" disabled={loading} className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors disabled:opacity-60 text-sm shadow-sm">
-              {loading ? 'Adding Skill...' : 'Add Skill (स्किल जोड़ें)'}
-            </button>
-          </form>
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
+          <CheckCircle className="text-green-600 flex-shrink-0" size={20} />
+          <p className="text-sm font-semibold text-green-800">
+            {lang === 'hi' ? '✅ स्किल जोड़ी गई! सत्यापन जल्द होगा।' : '✅ Skill added! It will be verified soon.'}
+          </p>
         </div>
+      )}
 
-        {skills.length > 0 && (
+      {/* Form */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <PlusCircle size={16} className="text-green-600" />
+          {lang === 'hi' ? 'नई स्किल की जानकारी' : 'New Skill Details'}
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <h2 className="text-sm font-bold text-gray-900 mb-3">My Skills (मेरी स्किल्स)</h2>
-            <div className="space-y-3">
-              {skills.map(skill => (
-                <div key={skill.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900">{skill.skill_name}</p>
-                    {skill.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{skill.description}</p>}
-                    <span className={`inline-block mt-2 px-2.5 py-0.5 rounded-full text-xs font-semibold ${CATEGORY_COLORS[skill.category] || 'bg-gray-100 text-gray-700'}`}>{skill.category}</span>
-                  </div>
-                  <div className="flex-shrink-0">
-                    {skill.status === 'verified' ? (
-                      <span className="flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold">
-                        <CheckCircle size={12} /> Verified
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-semibold">
-                        <Clock size={12} /> Pending
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              {lang === 'hi' ? 'स्किल का नाम *' : 'Skill Name *'}
+            </label>
+            <input value={form.skillName} onChange={e => setForm(p => ({ ...p, skillName: e.target.value }))}
+              placeholder={lang === 'hi' ? 'जैसे: बढ़ईगीरी, सिलाई, डिजिटल मार्केटिंग' : 'e.g. Carpentry, Sewing, Digital Marketing'}
+              className="input-field" required />
           </div>
-        )}
 
-        {skills.length === 0 && !loading && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-            <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <PlusCircle size={24} className="text-gray-400" />
-            </div>
-            <p className="text-sm font-medium text-gray-600">No skills added yet</p>
-            <p className="text-xs text-gray-400 mt-1">Add your first skill to get started!</p>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              {lang === 'hi' ? 'श्रेणी *' : 'Category *'}
+            </label>
+            <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+              className="input-field appearance-none" required>
+              <option value="">{lang === 'hi' ? 'श्रेणी चुनें' : 'Select a category'}</option>
+              {SKILL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
-        )}
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              {lang === 'hi' ? 'विवरण' : 'Description'} <span className="text-gray-400 font-normal">({lang === 'hi' ? 'वैकल्पिक' : 'Optional'})</span>
+            </label>
+            <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+              placeholder={lang === 'hi' ? 'इस स्किल में अपने अनुभव के बारे में लिखें...' : 'Describe your experience with this skill...'}
+              className="input-field resize-none" rows={3} />
+          </div>
+
+          {/* Photo upload */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              📸 {lang === 'hi' ? 'फोटो प्रमाण' : 'Photo Proof'} <span className="text-gray-400 font-normal">({lang === 'hi' ? 'वैकल्पिक' : 'Optional'})</span>
+            </label>
+            <input ref={photoRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
+            {photoPreview ? (
+              <div className="relative inline-block">
+                <img src={photoPreview} alt="Preview" className="w-32 h-32 object-cover rounded-xl border border-gray-200" />
+                <button type="button" onClick={() => { setPhotoPreview(null); photoRef.current.value = ''; }}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition">
+                  <X size={12} />
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => photoRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-green-300 hover:text-green-600 transition w-full justify-center">
+                <Camera size={18} />
+                {lang === 'hi' ? 'फोटो अपलोड करें' : 'Upload Photo'}
+              </button>
+            )}
+          </div>
+
+          {/* Video upload */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              🎥 {lang === 'hi' ? 'वीडियो प्रमाण' : 'Video Proof'} <span className="text-gray-400 font-normal">({lang === 'hi' ? 'वैकल्पिक' : 'Optional'})</span>
+            </label>
+            <input ref={videoRef} type="file" accept="video/*" onChange={handleVideo} className="hidden" />
+            {videoPreview ? (
+              <div className="relative inline-block w-full">
+                <video src={videoPreview} controls className="w-full rounded-xl border border-gray-200 max-h-48" />
+                <button type="button" onClick={() => { setVideoPreview(null); videoRef.current.value = ''; }}
+                  className="absolute top-2 right-2 w-7 h-7 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition">
+                  <X size={13} />
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => videoRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-green-300 hover:text-green-600 transition w-full justify-center">
+                <Video size={18} />
+                {lang === 'hi' ? 'वीडियो अपलोड करें' : 'Upload Video'}
+              </button>
+            )}
+          </div>
+
+          <button type="submit" disabled={loading}
+            className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all disabled:opacity-60 shadow-sm hover:shadow-md active:scale-95">
+            {loading
+              ? (lang === 'hi' ? 'जोड़ा जा रहा है...' : 'Adding skill...')
+              : (lang === 'hi' ? '+ स्किल जोड़ें' : '+ Add Skill')}
+          </button>
+        </form>
       </div>
+
+      {/* My Skills List */}
+      {skills.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h2 className="text-sm font-bold text-gray-800 mb-3">
+            {lang === 'hi' ? '📋 मेरी स्किल्स' : '📋 My Skills'}
+          </h2>
+          <div className="space-y-2">
+            {skills.map((sk, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{sk.skillName}</p>
+                  <p className="text-xs text-gray-500">{sk.category}</p>
+                </div>
+                <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLES[sk.status] || STATUS_STYLES.pending}`}>
+                  {sk.status === 'verified'
+                    ? (lang === 'hi' ? '✓ सत्यापित' : '✓ Verified')
+                    : (lang === 'hi' ? '⏳ लंबित' : '⏳ Pending')}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

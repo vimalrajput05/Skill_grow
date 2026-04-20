@@ -1,143 +1,112 @@
-# SkillGrow India 🚀
+# SkillGrow India 🌱
 
-Production-ready full-stack skill learning platform for rural India with AI, voice support (Hindi/EN), dark mode, and real income opportunities.
+**Empowering rural India with skills, training, and real income opportunities.**
 
-## 🏗️ Tech Stack
+---
 
-**Backend**: Node.js + Express + MongoDB + JWT + Multer
-**Frontend**: React 18 (JSX) + Vite + Tailwind CSS + React Router
-**Features**: Web Speech API (voice), dark mode, EN↔हिं, help modals
+## 🚀 Quick Start
 
-## 📋 Quick Setup (5 min)
-
-### Prerequisites
-```
-Node.js 18+
-MongoDB (local or MongoDB Atlas)
-```
-
-### 1. Clone & Install
-```bash
-git clone <repo>
-cd skillgrow-india
-```
-
-### 2. Backend Setup
+### Backend
 ```bash
 cd backend
 npm install
-# Copy .env template & update MONGODB_URI, JWT_SECRET
-cp .env.example .env  # or edit .env manually
+# Create .env (already provided)
 npm run dev
+# Server runs on http://localhost:5000
 ```
-**Runs**: `http://localhost:5000`
 
-### 3. Frontend Setup
+### Frontend
 ```bash
-cd ../frontend
+cd frontend
 npm install
 npm run dev
-```
-**Runs**: `http://localhost:5173`
-
-### 4. Test Flow
-1. Visit `localhost:5173`
-2. Landing → **Register** (mobile/password/village/state)
-3. **Login** → Dashboard
-4. Add Skill → Learn Skills → Request → Slots auto-create
-5. Find trainers/jobs → Profile (trust score updates)
-
-## 🚀 Features Demo
-
-| Feature | Status |
-|---------|--------|
-| JWT Auth (mobile only) | ✅ |
-| 7 Models (User/Skill/Trainer/Slot/Job/Group/Order) | ✅ |
-| Voice AI (EN/Hindi) every page/card | ✅ |
-| Dark Mode toggle | ✅ |
-| Help modals step-by-step | ✅ |
-| Demand → Auto Training Slots | ✅ |
-| Trust Score system | ✅ |
-| Responsive (mobile-first) | ✅ |
-| Upload proof images | ✅ |
-
-## 🗄️ Project Structure
-```
-skillgrow-india/
-├── backend/          # Express API + MongoDB
-├── frontend/         # React + Vite + Tailwind
-├── .gitignore       # Node modules, env, uploads
-└── README.md
+# App opens on http://localhost:5173
 ```
 
-## 🔧 Environment Variables
+---
 
-**backend/.env**
+## 🔑 Key Fixes Applied
+
+### Critical Bug Fixes
+1. **User.js regex** — Fixed `\\d` → `\d` (was breaking ALL registration)
+2. **MongoDB URI** — Added database name `skillgrow` to URI
+3. **Skill routes** — Fixed `/my-skills` ordering (must be before `/:id`)
+4. **AuthContext** — Cleaned up logout, error propagation
+5. **App routing** — Home page now loads first (not login)
+
+### Features Added/Fixed
+- ✅ Home page loads first at `/`
+- ✅ Login/Signup buttons prominent on landing
+- ✅ After login → redirects to `/dashboard`
+- ✅ Profile dropdown: View Profile / Settings / Logout
+- ✅ Language switcher (EN/Hindi) on all pages — no mixed text
+- ✅ Photo + Video upload on Add Skill page
+- ✅ Redesigned Profile page with modern card layout
+- ✅ Fixed sidebar/navbar alignment
+- ✅ Mobile responsive bottom nav
+- ✅ Clean TopBar with notifications
+- ✅ All pages translated (EN/Hindi toggle)
+- ✅ Dark mode removed (was broken) — clean light theme instead
+
+---
+
+## 📁 Project Structure
+
+```
+skillgrow-jsx/
+├── frontend/          # React + Vite + Tailwind
+│   └── src/
+│       ├── pages/     # All 16 pages
+│       ├── components/
+│       │   └── layout/ # Layout, TopBar, Sidebar, MobileNav
+│       ├── context/   # AuthContext, AppContext
+│       └── services/  # api.js
+└── backend/           # Node.js + Express + MongoDB
+    ├── controllers/
+    ├── models/
+    ├── routes/
+    └── middleware/
+```
+
+---
+
+## 🎯 Demo Flow (for judges)
+
+1. Open http://localhost:5173 → **Landing page**
+2. Click **"Get Started Free"** → Register with mobile number
+3. After registration → **Dashboard** with stats, quick actions
+4. Click **"Add Skill"** → Add a skill with photo/video upload
+5. Click **"Learn Skill"** → Browse 200+ skills, request learning
+6. Click **"Find Trainer"** → See available trainers, call/chat
+7. Click **"Jobs"** → Browse jobs, apply, post hiring
+8. Click **"Profile"** → See redesigned profile, language switch
+9. Top navbar → Profile dropdown → Logout
+
+---
+
+## 🌐 Language Switch
+
+Click the **EN/हिं** button in:
+- Top navbar (when logged in)
+- Landing page navbar
+- Login/Register pages
+
+All content switches between English and Hindi instantly.
+
+---
+
+## 🛠️ .env (Backend)
+
 ```
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/skillgrow
-JWT_SECRET=your_super_secret_key_2025
+MONGODB_URI=mongodb+srv://...@cluster0.../skillgrow?appName=Cluster0
+JWT_SECRET=skillgrow_secret_key_2025
+JWT_EXPIRES_IN=7d
 FRONTEND_URL=http://localhost:5173
 ```
 
-**frontend/.env**
+## 🛠️ .env (Frontend)
+
 ```
 VITE_API_URL=http://localhost:5000/api
 ```
-
-## 📱 Working Flow
-
-```
-1. User Registers (mobile + village)
-2. Add Skills (photo proof upload)
-3. Skills get verified → Trust Score +5
-4. Request Skills (demandCount++)
-5. 10+ requests → Auto TrainingSlot created
-6. Join slot (10 users → auto 'active')
-7. Complete → Trust Score +15
-8. Post Jobs / Form Groups / Take Orders
-9. Group completes → Trust Score +25
-10. High trust → Premium orders
-```
-
-## 🎯 Business Logic
-
-- **Demand Trigger**: `skill.demandCount >= 10` → create TrainingSlot
-- **Slot Activation**: `joinedUsers >= minUsers` → status='active'
-- **Trust Score**: Join(+5) → Complete(+15) → Order(+25), max 100
-- **Uploads**: Multer to /uploads (images/videos <10MB)
-- **Validation**: express-validator all inputs
-
-## 🧪 API Endpoints (Postman)
-```
-POST /api/auth/register  → mobile/password/village
-POST /api/auth/login     → {mobile, password} → JWT token
-GET /api/auth/me         → user profile (protected)
-GET /api/skills          → ?category=AI&search=crop
-POST /api/skills/request/:id
-GET /api/slots/join/:id
-```
-
-## 🌐 Production Deploy
-
-```
-Backend: Render/Heroku (MongoDB Atlas)
-Frontend: Vercel/Netlify
-Env: Change FRONTEND_URL to production domain
-```
-
-## 📞 Support
-- Helpline: 1800-SKILL-GROW (demo)
-- Voice: Speaker icon reads Hindi/EN
-- Help: ? button every page with step-by-step
-
-## 🤝 Contributing
-1. Fork repo
-2. `git checkout -b feature/add-new-skill`
-3. `npm install && npm test`
-4. Commit → PR
-
-**Made with ❤️ for Rural India | ग्रामीण भारत के लिए**
-
-![SkillGrow](https://via.placeholder.com/1200x600/16a34a/ffffff?text=SkillGrow+India)
-

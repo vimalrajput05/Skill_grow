@@ -6,22 +6,21 @@ const uploadMiddleware = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
 
-// Public routes
+// Public
 router.get('/', skillController.getSkills);
-router.get('/:id', skillController.getSkill);
-router.get('/top-demand', skillController.getTopDemand);
+router.get('/top-demand', skillController.getTopDemand); // must be BEFORE /:id
 
-// Protected routes
+// Protected
 router.use(authMiddleware);
+router.get('/my-skills', skillController.getMySkills);   // must be BEFORE /:id
+
+router.get('/:id', skillController.getSkill);
 
 router.post('/add-my-skill', [
   body('skillName').trim().notEmpty().withMessage('Skill name required'),
-  body('category').isIn(['Farming', 'Technical', 'Home-Based', 'Digital', 'Business', 'AI', 'Safety', 'Other']).withMessage('Invalid category'),
-  body('description').trim().notEmpty().withMessage('Description required')
+  body('category').isIn(['Farming', 'Carpentry', 'Sewing', 'Technical', 'Home-Based', 'Digital', 'Business', 'AI', 'Safety', 'Other']).withMessage('Invalid category'),
 ], uploadMiddleware.single('proofImage'), skillController.addMySkill);
 
 router.post('/request/:id', skillController.requestSkill);
-router.get('/my-skills', skillController.getMySkills);
 
 module.exports = router;
-

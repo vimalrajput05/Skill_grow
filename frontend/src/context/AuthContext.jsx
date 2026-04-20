@@ -18,18 +18,18 @@ export const AuthProvider = ({ children }) => {
           setToken(savedToken);
         } else {
           localStorage.removeItem('skillgrow_token');
+          localStorage.removeItem('skillgrow_user');
         }
       }
-    } catch (error) {
+    } catch {
       localStorage.removeItem('skillgrow_token');
+      localStorage.removeItem('skillgrow_user');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+  useEffect(() => { fetchUser(); }, [fetchUser]);
 
   const login = async (mobile, password) => {
     const { data } = await authAPI.login({ mobile, password });
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
     throw new Error(data.message || 'Registration failed');
   };
 
-  const logout = async () => {
+  const logout = () => {
     localStorage.removeItem('skillgrow_token');
     localStorage.removeItem('skillgrow_user');
     setUser(null);
@@ -64,35 +64,27 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateLanguage = async (language) => {
-    const { data } = await authAPI.updateLanguage(language);
-    if (data.success && user) {
-      setUser({ ...user, language: data.user.language });
-      localStorage.setItem('skillgrow_user', JSON.stringify({ ...user, language: data.user.language }));
-    }
+    try {
+      const { data } = await authAPI.updateLanguage(language);
+      if (data.success && user) {
+        const updated = { ...user, language: data.user.language };
+        setUser(updated);
+        localStorage.setItem('skillgrow_user', JSON.stringify(updated));
+      }
+    } catch {}
   };
 
   const updateProfile = async (profileData) => {
     const { data } = await authAPI.updateProfile(profileData);
     if (data.success && user) {
-      setUser({ ...user, ...data.user });
-      localStorage.setItem('skillgrow_user', JSON.stringify({ ...user, ...data.user }));
+      const updated = { ...user, ...data.user };
+      setUser(updated);
+      localStorage.setItem('skillgrow_user', JSON.stringify(updated));
     }
   };
 
-  const value = {
-    user,
-    token,
-    loading,
-    login,
-    register,
-    logout,
-    updateLanguage,
-    updateProfile,
-    isAuthenticated: !!user && !!token
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateLanguage, updateProfile, isAuthenticated: !!user && !!token }}>
       {children}
     </AuthContext.Provider>
   );
@@ -103,4 +95,3 @@ export const useAuth = () => {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 };
-
