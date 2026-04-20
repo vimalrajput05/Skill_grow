@@ -99,7 +99,7 @@ All content switches between English and Hindi instantly.
 
 ```
 PORT=5000
-MONGODB_URI=mongodb+srv://...@cluster0.../skillgrow?appName=Cluster0
+MONGODB_URI
 JWT_SECRET=skillgrow_secret_key_2025
 JWT_EXPIRES_IN=7d
 FRONTEND_URL=http://localhost:5173
